@@ -129,22 +129,20 @@ EOL;
 	 * Insert match data into database (including teams and maps)
 	 */
 	public static function addMatch($data = array()) {
+		set_time_limit(0);
 		$db = apiDB::connect();
 
 		if (!is_array($data) || !count($data)){
-			return array(
-				'success' => FALSE,
-				'message' => 'Could not add match. Data is either empty or not an array.'
-			);
+			return FALSE;
 		}
 
 		foreach($data as $match) {
-			if (empty($match['team1']) 
-				|| empty($match['team2']) 
-				|| empty($match['map']) 
-				|| empty($match['date']) 
-				|| empty($match['score1']) 
-				|| empty($match['score2'])) {
+			if (!isset($match['team1']) 
+				|| !isset($match['team2']) 
+				|| !isset($match['map']) 
+				|| !isset($match['date']) 
+				|| !isset($match['score1']) 
+				|| !isset($match['score2'])) {
 				continue;
 			}
 			// UPSERT TEAMS

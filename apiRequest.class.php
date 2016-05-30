@@ -17,22 +17,21 @@ class apiRequest extends apiBase {
 			$this->output = apiDB::addMatch($this->params);
 		} else {
 			// Check params to see what data to return
+			// Return the team's record between the start and end dates
+			if (isset($this->params['date_start']) && isset($this->params['date_end']) && isset($this->params['team'])) {
+				$this->output = apiDB::teamDates($this->params);
+			}
+			// Return the top 10 teams between the start and end dates 
+			else if (isset($this->params['date_start']) && isset($this->params['date_end'])) {
+				$this->output = apiDB::topDates($this->params);
+			}
+			// Return the teams all time record
+			else if (isset($this->params['team'])) {
+				$this->output = apiDB::team($this->params);
+			} 
 			// If no parameters, return top 10 teams
-			if (empty($this->params)) {
-				$this->output = apiDB::top(array('limit' => 10));
-			} else {
-				// Return the team's record between the start and end dates
-				if (isset($this->params['date_start']) && isset($this->params['date_end']) && isset($this->params['team'])) {
-					$this->output = apiDB::teamDates($this->params);
-				}
-				// Return the top 10 teams between the start and end dates 
-				else if (isset($this->params['date_start']) && isset($this->params['date_end'])) {
-					$this->output = apiDB::topDates($this->params);
-				}
-				// Return the teams all time record
-				else if (isset($this->params['team'])) {
-					$this->output = apiDB::team($this->params);
-				}
+			else {
+				$this->output = apiDB::top($this->params);
 			}
 		}
 	}
