@@ -8,11 +8,8 @@ abstract class apiBase {
 
 	/*
 	 * Object construct
-	 * @params $arg array
-	 *		params = an array of data passed in. used by function
-	 *		decode_type = whether post is a json object or array
 	 */
-	public function __construct($arg) {
+	public function __construct() {
 		if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			$this->params = apiUtility::getPost();
 			$this->requestType = 'POST';
@@ -28,23 +25,19 @@ abstract class apiBase {
 	}
 
 	/*
-	 * Output with success or failure
-	 * 
-	 * This allows the api to be used by internal functions or
-	 * as a standard api call eliminating need for a file_get_contents
-	 * if an internal function wants to use the child api class
-	 * 
-	 * @param $exit bool
-	 * 	Sets whether output should exit php process or not
-	 * @return void
+	 * Output success or failure
 	 */
 	public function output() {
+		if (!$this->output) {
+			apiUtility::outputFailure();
+		}
+
 		apiUtility::outputSuccess($this->output);
 	}
 	
 
 	/*
-	 * Function child classes are to use for primary functionality
+	 * Function child classes will use for primary functionality
 	 */
 	public abstract function process();
 

@@ -1,42 +1,39 @@
 <?php
 class apiRequest extends apiBase {
 
-	public function __construct($arg=array()) {
-		parent::__construct($arg);
+	/**
+	 * apiRequest constructor - nothing unique so just use apiBase's
+	 */
+	public function __construct() {
+		parent::__construct();
 	}
 
-	public function output() {
-		if (!$this->output)
-			apiUtility::outputFailure('The API was unsuccessful in outputting.');
-
-		apiUtility::outputSuccess($this->output);
-	}
-
+	/**
+	 * Process the API Request
+	 */
 	public function process() {
 		if ($this->requestType == "POST") {
 			// Add matches to DB
 			$this->output = apiDB::addMatch($this->params);
 		} else {
 			// Check params to see what data to return
-
-			/* If no parameters, return top 10 teams */
+			// If no parameters, return top 10 teams
 			if (empty($this->params)) {
 				$this->output = apiDB::top(array('limit' => 10));
 			} else {
+				// Return the team's record between the start and end dates
 				if (isset($this->params['date_start']) && isset($this->params['date_end']) && isset($this->params['team'])) {
-					// Return the team's record between the start and end dates
 					$this->output = apiDB::teamDates($this->params);
-				} else if (isset($this->params['date_start']) && isset($this->params['date_end'])) {
-					// Return the top 10 teams between the start and end dates
+				}
+				// Return the top 10 teams between the start and end dates 
+				else if (isset($this->params['date_start']) && isset($this->params['date_end'])) {
 					$this->output = apiDB::topDates($this->params);
-				} else if (isset($this->params['team'])) {
-					// Return the teams alltime record
+				}
+				// Return the teams all time record
+				else if (isset($this->params['team'])) {
 					$this->output = apiDB::team($this->params);
-				} else {
-					// error
 				}
 			}
 		}
 	}
-
 }

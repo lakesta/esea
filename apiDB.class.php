@@ -8,12 +8,24 @@ class apiDB {
 	public static $pass = "root";
 	public static $status = array('Win' => 1, 'Loss' => 2, 'Tie' => 3);
 
+	/**
+	 * Create a DB connection and return it or error out 
+	 */
+	protected static function connect() {
+		$conn = mysqli_connect(apiDB::$host, apiDB::$name, apiDB::$pass, apiDB::$database);
+		if (!$conn) {
+			apiUtility::outputFailure();
+		} else {
+			return $conn;
+		}
+	}
+
 	/** 
 	 * GET Request with no parameters 
 	 * Return top 10 teams by record
 	*/
 	public static function top($args = array()) {
-		$db = mysqli_connect(apiDB::$host, apiDB::$name, apiDB::$pass, apiDB::$database) or die('501 Database Error');
+		$db = apiDB::connect();
 		$limit = $args['limit'];
 		$q = <<<EOL
 SELECT t.name team, SUM(mr.status=1) wins, SUM(mr.status=2) losses, SUM(mr.status=3) ties
@@ -38,7 +50,7 @@ EOL;
 	 * Return top 10 teams by record within the given date range
 	 */
 	public static function topDates($args = array()) {
-		$db = mysqli_connect(apiDB::$host, apiDB::$name, apiDB::$pass, apiDB::$database) or die('501 Database Error');
+		$db = apiDB::connect();
 		$limit = $args['limit'];
 		$start = date('Y-m-d H:i:s', strtotime($args['date_start']));
 		$end = date('Y-m-d H:i:s', strtotime($args['date_end']));
@@ -66,7 +78,7 @@ EOL;
 	 * Return team record within given date range
 	 */
 	public static function teamDates($args = array()) {
-		$db = mysqli_connect(apiDB::$host, apiDB::$name, apiDB::$pass, apiDB::$database) or die('501 Database Error');
+		$db = apiDB::connect();
 		$team = $args['team'];
 		$start = date('Y-m-d H:i:s', strtotime($args['date_start']));
 		$end = date('Y-m-d H:i:s', strtotime($args['date_end']));
@@ -78,7 +90,6 @@ WHERE upper(t.name) = upper('$team')
 AND mr.match_id IN (SELECT id FROM matches WHERE date >= '$start' AND date <= '$end')
 GROUP BY t.id;
 EOL;
-		//$q = "SELECT id FROM matches WHERE 'date' >= $start AND date <= $end";
 		$result = $db->query($q);
 		$return = array();
 		while ($row = $result->fetch_assoc()) {
@@ -94,7 +105,7 @@ EOL;
 	 * Return team record all time
 	 */
 	public static function team($args = array()) {
-		$db = mysqli_connect(apiDB::$host, apiDB::$name, apiDB::$pass, apiDB::$database) or die('501 Database Error');
+		$db = apiDB::connect();
 		$team = $args['team'];
 		$q = <<<EOL
 SELECT t.name team, SUM(mr.status=1) wins, SUM(mr.status=2) losses, SUM(mr.status=3) ties
@@ -118,7 +129,7 @@ EOL;
 	 * Insert match data into database (including teams and maps)
 	 */
 	public static function addMatch($data = array()) {
-		$db = mysqli_connect(apiDB::$host, apiDB::$name, apiDB::$pass, apiDB::$database) or die('501 Database Error');
+		$db = apiDB::connect();
 
 		if (!is_array($data) || !count($data)){
 			return array(
@@ -128,6 +139,14 @@ EOL;
 		}
 
 		foreach($data as $match) {
+			if (empty($match['team1']) 
+				|| empty($match['team2']) 
+				|| empty($match['map']) 
+				|| empty($match['date']) 
+				|| empty($match['score1']) 
+				|| empty($match['score2'])) {
+				continue;
+			}
 			// UPSERT TEAMS
 			$q1 = $db->prepare("INSERT INTO teams (name) VALUES (?) ON DUPLICATE KEY UPDATE id=id");
 			$q1->bind_param('s', $match['team1']);
@@ -203,5 +222,6 @@ EOL;
 		}
 
 		$db->close();
+		return TRUE;
 	}
 }
